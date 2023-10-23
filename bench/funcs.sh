@@ -11,9 +11,39 @@ run_cmd() {
 }
 
 
-run_llama() {
-  run_cmd $COMPILED "$MODEL_BIN" $OPTS
+gen_report() {
+  RESULTS="$1"
+  RESID=$(md5 -r $RESULTS | cut -c1-4)
+  REPORT="/tmp/hypertune-report-$RESID.html"
+  echo "" > $REPORT
+  LN=$(grep -Fn "'---DATA_POINTS---';" $REPORT_TEMPLATE | cut -d':' -f1)
+  LN=$(($LN - 1))
+  head -n $LN $REPORT_TEMPLATE >> $REPORT
+  echo "const data_points = " >> $REPORT;
+  cat $RESULTS >> $REPORT
+  echo ";" >> $REPORT
+  tail -n +$(($LN + 2)) $REPORT_TEMPLATE >> $REPORT
+
+  # build string <h4>str</h4> from VERSIONS array
+  VERSIONS_STR=""
+  {
+    for ver in "${VERSIONS[@]}" ; do
+        IFS=',' read -ra PARTS <<< "$ver"
+        VERSION="${PARTS[0]}"
+        URL="${PARTS[1]}"
+        BRANCH="${PARTS[2]:-master}" # If branch is not set, default to 'master'
+        VERSIONS_STR="$VERSIONS_STR<h4>$VERSION: $URL ($BRANCH)</h4>"
+    done
+  } < /dev/null
+
+  ORIGINAL_STR='<!-- VERSIONS -->'
+  REPL='s#'$ORIGINAL_STR'#'$VERSIONS_STR'#g'
+
+  # replace "<!-- VERSIONS -->" to a string $VERSIONS_STR
+  sed -i '.bak' "$REPL" $REPORT
+
+  echo $REPORT
 }
 
 export -f run_cmd
-export -f run_llama
+export -f gen_report

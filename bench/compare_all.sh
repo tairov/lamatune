@@ -35,7 +35,7 @@ hypertune "run_{ver} {model}" \
 --export-json=$REPORT_FILE2
 
 
-echo "Benchmark finished. Report file: $REPORT_FILE"
-echo "Benchmark finished. Report file: $REPORT_FILE2"
+echo "Benchmark multi-threaded finished. Report json: $REPORT_FILE"
+echo "Benchmark single-threaded finished. Report json: $REPORT_FILE2"
 
 popd

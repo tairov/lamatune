@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Aydyn Tairov">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.26.2.min.js" charset="utf-8"></script>
+
+  <!-- Place this tag in your head or just before your close body tag. -->
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <title>Benchmark report</title>
+</head>
+
+<body class="bg-gray-100">
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+
+    <div>
+
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-medium mb-6">Report</h2>
+        <!-- VERSIONS -->
+        <div class="flex space-x-6 pt-10">
+          <div class="flex-1 mb-6 bg-gray-200 rounded p-4 flex items-center justify-center">
+            <div id="tok-chart1">
+
+            </div>
+          </div>
+
+          <table class="ml-6 w-1/4">
+            <thead>
+              <tr class="border-b">
+                <th class="py-1 px-2 text-left">&nbsp;</th>
+                <th class="py-1 px-2 text-left">&nbsp;</th>
+              </tr>
+            </thead>
+          </table>
+
+        </div>
+
+        <!-- Row for Second Chart -->
+        <div class="flex space-x-6 items-start">
+          <!-- Second Chart Div: 75% Width -->
+          <div class="w-3/4 mb-6 bg-gray-200 rounded p-4 flex items-center justify-center">
+            <div id="time-chart1"></div>
+          </div>
+
+
+          <table class="w-1/4 mt-6 table-fixed"> <!-- Added table-fixed -->
+            <thead>
+              <tr class="border-b">
+                <th class="py-1 px-2 text-left">&nbsp;</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+        <!-- </div> -->
+
+        <div class="flex space-x-6 items-start">
+          <div class="w-3/4 mb-6 bg-gray-200 rounded p-4 flex flex-col items-center justify-center"
+            id="points-template">
+
+          </div>
+          <table class="w-1/4 mt-6 table-fixed"> <!-- Added table-fixed -->
+            <thead>
+              <tr class="border-b">
+                <th class="py-1 px-2 text-left">&nbsp;</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+
+
+<script>
+  // lang or repo
+  function get_item_name(result_item, part = "lang") {
+    var res = result_item.parameters?.model || result_item.command;
+    return res;
+  };
+
+  function get_trace_name(result_item) {
+    var res = result_item.command;
+    return res;
+  };
+
+  function get_tokens_performance_layout(width = 650, height = 370) {
+    return {
+      bargap: 0.05,
+      bargroupgap: 0.2,
+      barmode: 'group',
+
+      xaxis: {
+        fixedrange: true,
+      },
+      margin: {
+        l: 40,
+        r: 40,
+        b: 40,
+        t: 40,
+      },
+      // width: width,
+      // height: height
+    }
+  }
+
+  function get_avg(arr) {
+    return arr.reduce((acc, val) => acc + val, 0) / (arr.length || 1);
+  }
+
+  function get_avg_min_max(arr) {
+    let avg = get_avg(arr);
+    let min = Math.min(...arr);
+    let max = Math.max(...arr);
+    return [avg - min, max - avg, avg];
+  }
+
+  function add_points_chart(ids, data, model = '') {
+
+    const layout = {
+      title: {
+        font: {
+          size: 16,
+        },
+      },
+      font: {
+        size: 12,
+      },
+    }
+
+    const config = {
+      displayModeBar: false,
+      editable: false,
+      scrollZoom: false, // disables zooming with scroll
+      displaylogo: false,
+    };
+
+
+    const tok_points_data = data.map(function (result, index) {
+      return {
+        __parameters: result.parameters,
+        // array from 0 to result.custom_metrics.length
+        x: [...Array(result.custom_metrics.length).keys()],
+        y: result.custom_metrics,
+        name: get_trace_name(result),
+        mode: 'markers',
+        type: 'scatter',
+      };
+    });
+
+    const time_points_data = data.map(function (result, index) {
+      return {
+        __parameters: result.parameters,
+        x: [...Array(result.times.length).keys()],
+        y: result.times,
+        name: get_trace_name(result),
+        mode: 'markers',
+        type: 'scatter',
+      };
+    });
+
+    const tok_layout = {
+      ...layout,
+      title: {
+        ...layout.title,
+        text: 'Tokens per second + [ ' + model + ' ]',
+      },
+    }
+
+    const time_layout = {
+      ...layout,
+      title: {
+        ...layout.title,
+        text: 'Time per inference (sec) + [ ' + model + ' ]',
+      },
+    }
+
+    Plotly.newPlot(ids.tokens_chart, tok_points_data, tok_layout, config);
+    Plotly.newPlot(ids.timings_chart, time_points_data, time_layout, config);
+  }
+
+  function add_charts(ids, data, model = '') {
+    const filt_data = data.results;
+
+    const yaxis_config = {
+      automargin: true,
+      zeroline: false,
+      autorange: true,
+      fixedrange: true, // no zoom
+      showgrid: false,
+      gridwidth: 1,
+      autorange: 'reversed',
+    };
+
+    const tok_layout = {
+      title: {
+        text: 'Avg. tokens per second',
+        font: {
+          size: 16,
+        },
+      },
+      font: {
+        size: 12,
+      },
+      yaxis: yaxis_config,
+      ...get_tokens_performance_layout()
+    }
+
+    const config = {
+      displayModeBar: false,
+      editable: false,
+      scrollZoom: false, // disables zooming with scroll
+      displaylogo: false,
+    };
+
+    const tok_data = filt_data.map(function (result, index) {
+      let min_max_avg = get_avg_min_max(result.custom_metrics);
+      return {
+        __parameters: result.parameters,
+        x: [min_max_avg[2]],
+        y: [get_item_name(result) + "  "],
+        name: get_trace_name(result),
+        boxpoints: false,
+        //name: get_item_name(result),
+        type: 'bar',
+        orientation: 'h',
+        error_x: {
+          type: 'data',
+          symmetric: false,
+          array: [min_max_avg[1]],
+          arrayminus: [min_max_avg[0]],
+        },
+        opacity: 0.7,
+        whiskerwidth: 0.3,
+        marker: {
+          line: {
+            width: 0.5
+          }
+        }
+      };
+    });
+
+    //tok_data.sort((a, b) => b.x[0] - a.x[0]);
+
+    const timings_data = filt_data.map(function (result, index) {
+      let min_max_avg = get_avg_min_max(result.times);
+      return {
+        x: [min_max_avg[2]],
+        y: [get_item_name(result) + "  "],
+        boxpoints: false,
+        name: get_trace_name(result),
+        type: 'bar',
+        orientation: 'h',
+        error_x: {
+          type: 'data',
+          symmetric: false,
+          array: [min_max_avg[1]],
+          arrayminus: [min_max_avg[0]],
+        },
+        opacity: 0.7,
+        whiskerwidth: 0.3,
+        marker: {
+          line: {
+            width: 0.5
+          }
+        }
+      };
+    });
+
+    //timings_data.sort((a, b) => a.x[0] - b.x[0]);
+
+    const timings_layout = {
+      title: {
+        text: 'Avg. time per inference (sec)',
+        font: {
+          size: 16,
+        },
+      },
+      ...get_tokens_performance_layout(),
+      yaxis: {
+        ...yaxis_config,
+      },
+      xaxis: {
+        fixedrange: true,
+      },
+    }
+
+
+    Plotly.newPlot(ids.tokens_chart, tok_data, tok_layout, config);
+    Plotly.newPlot(ids.timings_chart, timings_data, timings_layout, config);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    add_charts({
+      tokens_chart: "tok-chart1",
+      timings_chart: "time-chart1",
+    }, data_points);
+
+    var models = data_points.results.map(function (item) {
+      return item.parameters?.model;
+    });
+
+    // uniq models
+    models = [...new Set(models)];
+
+    models.map(function (model) {
+      var points = data_points.results.filter(function (item) {
+        return item.parameters.model == model;
+      });
+
+      var div = document.createElement('div');
+      div.id = 'points-chart-' + model;
+      // add div to div#points-template
+      document.getElementById('points-template').appendChild(div);
+
+      var div2 = document.createElement('div');
+      div2.id = 'points-chart-timing-' + model;
+
+      // add div to div#points-template
+      document.getElementById('points-template').appendChild(div2);
+
+      add_points_chart({
+        tokens_chart: div.id,
+        timings_chart: div2.id,
+      }, points, model);
+    });
+
+  });
+</script>
+
+<script>
+'---DATA_POINTS---';
+</script>
+
+</html>
