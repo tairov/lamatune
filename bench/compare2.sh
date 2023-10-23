@@ -6,8 +6,6 @@ source ./funcs.sh
 export tempdir='/tmp'
 pushd .
 
-export BENCHMARK_RUNS=10
-
 VERSIONS=(
   "v1,https://github.com/tairov/llama2.mojo.git,master"
   "v2,git@github.com:andresnowak/llama2.mojo.git,master"
@@ -78,7 +76,7 @@ hypertune "run_{ver} {model}" \
 -L ver $IMPLEMENTATIONS -L model $PARAM_MODELS \
 --output=report \
 --export-json=/tmp/compare2.json \
--r $BENCHMARK_RUNS -g
+-r $BENCHMARK_ROUNDS -g
 
 REP_FILE=$(gen_report /tmp/compare2.json)
 open $REP_FILE

@@ -19,7 +19,7 @@ REPORT_FILE="/tmp/compare_all_${DT}.json"
 
 hypertune "run_{ver} {model}" \
 -L ver $IMPLEMENTATIONS -L model $PARAM_MODELS \
--r $BENCHMARK_RUNS -g \
+-r $BENCHMARK_ROUNDS -g \
 --output=report \
 --export-json=$REPORT_FILE
 
@@ -30,7 +30,7 @@ REPORT_FILE2="/tmp/compare_all_${DT}_single_thread.json"
 
 hypertune "run_{ver} {model}" \
 -L ver $IMPLEMENTATIONS -L model $PARAM_MODELS \
--r $BENCHMARK_RUNS -g \
+-r $BENCHMARK_ROUNDS -g \
 --output=report \
 --export-json=$REPORT_FILE2
 

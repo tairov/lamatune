@@ -29,7 +29,6 @@ run_tairov-llama2.mojo() {
 run_ggerganov-llama.cpp() {
   MODEL_BIN=$WORKDIR/models/$1
   cd $WORKDIR/llama.cpp
-  # check path in $MODEL_BIN if last name == stories15M.bin, substitude to out/stories15M.bin.gguf
   GMODEL=${MODEL_BIN}.gguf
   # built in CPU only mode
   # system_info: n_threads = 5 / 10 | AVX = 0 | AVX2 = 0 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | FMA = 0 | NEON = 1 | ARM_FMA = 1 | F16C = 0 | FP16_VA = 1 | WASM_SIMD = 0 | BLAS = 1 | SSE3 = 0 | SSSE3 = 0 | VSX = 0 |
