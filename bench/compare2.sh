@@ -8,7 +8,7 @@ pushd .
 
 VERSIONS=(
   "v1,https://github.com/tairov/llama2.mojo.git,master"
-  "v2,git@github.com:andresnowak/llama2.mojo.git,master"
+  "v2,git@github.com:mikowals/llama2.mojo.git,batch-matmul"
 )
 
 cd $tempdir
