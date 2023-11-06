@@ -14,10 +14,10 @@ run_cmd() {
 gen_report() {
   RESULTS="$1"
   if [[ $(uname) == "Darwin" ]]; then
-    # macOS (BSD sed)
+    # macOS (BSD md5)
     RESID=$(md5 -r $RESULTS | cut -c1-4)
   else
-    # Linux (GNU sed)
+    # Linux (GNU md5)
     RESID=$(md5sum $RESULTS | cut -c1-4)
   fi
 
