@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source ./config.sh
-source ./funcs.sh
+source ./funcs.sh 
 
 export tempdir='/tmp'
 pushd .
@@ -42,37 +42,30 @@ run_v2() {
 run_checkout
 
 run_setup() {
-  if [ "$1" == "v1" ]; then
-    cd $tempdir/v1/
-    mojo build llama2.mojo
-  elif [ "$1" == "v2" ]; then
-    cd $tempdir/v2/
-    mojo build llama2.mojo
-  fi;
+  cd $tempdir/$1/
+  mojo build llama2.mojo
 }
 
 export -f run_v1
 export -f run_v2
 export -f run_setup
 
-run_setup v1
-# if exit code is not 0, exit
-if [ $? -ne 0 ]; then
-  echo "Error building v1"
-  exit 1
-fi
+IMPLEMENTATIONS=('v1' 'v2')
 
-run_setup v2
-# if exit code is not 0, exit
-if [ $? -ne 0 ]; then
-  echo "Error building v2"
-  exit 1
-fi
+# Loop through all versions in IMPLEMENTATIONS and set them up
+for ver in "${IMPLEMENTATIONS[@]}"; do
+  run_setup "$ver"
 
-IMPLEMENTATIONS='v1,v2'
-PARAM_MODELS='stories15M.bin,stories42M.bin,stories110M.bin'
+  if [ $? -ne 0 ]; then
+    echo "Error building $ver"
+    exit 1
+  fi
+done
 
-hypertune "run_{ver} {model}" \
+IMPLEMENTATIONS="v1,v2"
+PARAM_MODELS="stories15M.bin,stories42M.bin,stories110M.bin"
+
+hypertune --shell=bash "run_{ver} {model}" \
 -L ver $IMPLEMENTATIONS -L model $PARAM_MODELS \
 --output=report \
 --export-json=/tmp/compare2.json \
