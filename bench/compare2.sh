@@ -1,14 +1,7 @@
 #!/bin/bash
 
-source ~/lamatune/bench/config.sh
-source ~/lamatune/bench/funcs.sh
-
-# source ./bench/config.sh
-# source ./bench/funcs.sh
-
-# This version gives an error saying path doesn't exist
-# source ./config.sh
-# source ./funcs.sh 
+source ./config.sh
+source ./funcs.sh 
 
 export tempdir='/tmp'
 pushd .
