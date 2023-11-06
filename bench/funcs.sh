@@ -13,7 +13,14 @@ run_cmd() {
 
 gen_report() {
   RESULTS="$1"
-  RESID=$(md5 -r $RESULTS | cut -c1-4)
+  if [[ $(uname) == "Darwin" ]]; then
+    # macOS (BSD sed)
+    RESID=$(md5 -r $RESULTS | cut -c1-4)
+  else
+    # Linux (GNU sed)
+    RESID=$(md5sum $RESULTS | cut -c1-4)
+  fi
+
   REPORT="/tmp/hypertune-report-$RESID.html"
   echo "" > $REPORT
   LN=$(grep -Fn "'---DATA_POINTS---';" $REPORT_TEMPLATE | cut -d':' -f1)
@@ -40,7 +47,13 @@ gen_report() {
   REPL='s#'$ORIGINAL_STR'#'$VERSIONS_STR'#g'
 
   # replace "<!-- VERSIONS -->" to a string $VERSIONS_STR
-  sed -i '.bak' "$REPL" $REPORT
+  if [[ $(uname) == "Darwin" ]]; then
+    # macOS (BSD sed)
+    sed -i '.bak' "$REPL" $REPORT
+  else
+      # Linux (GNU sed)
+      sed -i "$REPL" "$REPORT"
+  fi
 
   echo $REPORT
 }
